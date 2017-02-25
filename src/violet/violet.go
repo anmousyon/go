@@ -12,7 +12,11 @@ import (
 func main() {
 	client := &Client{}
 	client.config.token = getToken()
-	fmt.Println(client.getSubreddit("python", "new"))
+	posts := client.getSubreddit("askreddit", "hot")
+	for _, post := range posts {
+		fmt.Println(post.Title)
+	}
+
 }
 
 //Client struct
@@ -22,7 +26,7 @@ type Client struct {
 	}
 }
 
-//Token struct
+//Token is used to authorize the user's requests
 type Token struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -30,8 +34,31 @@ type Token struct {
 	Scope       string `json:"scope"`
 }
 
-//Submission struct
-type Submission struct {
+// Comment is a submission to a post
+type Comment struct {
+	Author              string  //`json:"author"`
+	Body                string  //`json:"body"`
+	BodyHTML            string  //`json:"body_html"`
+	Subreddit           string  //`json:"subreddit"`
+	LinkID              string  //`json:"link_id"`
+	ParentID            string  //`json:"parent_id"`
+	SubredditID         string  //`json:"subreddit_id"`
+	FullID              string  //`json:"name"`
+	UpVotes             float64 //`json:"ups"`
+	DownVotes           float64 //`json:"downs"`
+	Created             float64 //`json:"created_utc"`
+	Edited              bool    //`json:"edited"`
+	BannedBy            *string //`json:"banned_by"`
+	ApprovedBy          *string //`json:"approved_by"`
+	AuthorFlairTxt      *string //`json:"author_flair_text"`
+	AuthorFlairCSSClass *string //`json:"author_flair_css_class"`
+	NumReports          *int    //`json:"num_reports"`
+	Likes               *int    //`json:"likes"`
+	Replies             []*Comment
+}
+
+// Post is a submission to a subreddit
+type Post struct {
 	Author       string  `json:"author"`
 	Title        string  `json:"title"`
 	URL          string  `json:"url"`
@@ -55,11 +82,22 @@ type Submission struct {
 	BannedBy     *string `json:"banned_by"`
 }
 
-//Response struct
+const (
+	listingKind = "Listing"
+	postKind    = "t3"
+	commentKind = "t1"
+	messageKind = "t4"
+)
+
+// author fields and body fields are set to the deletedKey if the user deletes
+// their post.
+const deletedKey = "[deleted]"
+
+//Response allows for easier parsing of reddit responses
 type Response struct {
 	Data struct {
 		Children []struct {
-			Data *Submission
+			Data *Post
 		}
 	}
 }
@@ -121,46 +159,44 @@ func getToken() string {
 	return token.AccessToken
 }
 
-func tokenString(resp *http.Response) string {
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	return buf.String()
+func respString(resp *http.Response) []byte {
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return nil
+	}
+	return buf.Bytes()
 }
 
 func tokenStruct(resp *http.Response) *Token {
-	body := []byte(tokenString(resp))
+	body := respString(resp)
 	token := new(Token)
 	json.Unmarshal(body, &token)
 	return token
 }
 
-func submissionStruct(resp *http.Response) *Submission {
-	body := []byte(tokenString(resp))
-	response := new(Response)
-	json.Unmarshal(body, &response)
-	submission := new(Submission)
-	submission = response.Data.Children[0].Data
-	return submission
-}
-
-func (c Client) getSubreddit(subreddit string, sort string) string {
+func (c Client) getSubreddit(subreddit string, sort string) []*Post {
 	submissionURL := "https://oauth.reddit.com/"
 	url := submissionURL + "r/" + subreddit + "/" + sort
 	resp := c.request(url)
-	submission := submissionStruct(resp)
-	return submission.Title
-	//TODO: create list of posts from response
+	posts, err := parsePost(resp)
+	if err != nil {
+		fmt.Println("error on post parse")
+	}
+	return posts
 }
 
-func (c Client) getPost(post string) string {
-	submissionURL := "https://oauth.reddit.com/"
-	url := submissionURL + "r/" + "TODO: get subreddit of post" + "/comments/" + post
-	resp := c.request(url)
-	submission := submissionStruct(resp)
-	return submission.Title
-	//TODO: create post from response
-}
+// parsePost parses a post into the user facing Post struct.
+func parsePost(resp *http.Response) ([]*Post, error) {
+	r := new(Response)
+	err := json.NewDecoder(resp.Body).Decode(r)
+	if err != nil {
+		return nil, err
+	}
 
-func getComments(post string) {
-	//TODO: create list of comments from post
+	submissions := make([]*Post, len(r.Data.Children))
+	for i, child := range r.Data.Children {
+		submissions[i] = child.Data
+	}
+
+	return submissions, nil
 }
