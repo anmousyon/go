@@ -16,7 +16,6 @@ func main() {
 	for _, post := range posts {
 		fmt.Println(post.Title)
 	}
-
 }
 
 //Client struct
@@ -176,8 +175,8 @@ func tokenStruct(resp *http.Response) *Token {
 
 func (c Client) getSubreddit(subreddit string, sort string) []*Post {
 	submissionURL := "https://oauth.reddit.com/"
-	url := submissionURL + "r/" + subreddit + "/" + sort
-	resp := c.request(url)
+	endpoint := submissionURL + "r/" + subreddit + "/" + sort
+	resp := c.request(endpoint)
 	posts, err := parsePost(resp)
 	if err != nil {
 		fmt.Println("error on post parse")
