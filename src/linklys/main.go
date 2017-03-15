@@ -3,11 +3,14 @@ package linklys
 import (
 	"net/http"
 	"linklys/handlers"
+	"github.com/julienschmidt/httprouter"
 )
 
 
 func main() {
-	http.HandleFunc("/", handlers.IndexHandler)
-	http.HandleFunc("/browse/", handlers.BrowseHandler)
-	http.ListenAndServe("localhost:8000", nil)
+	router := httprouter.New()
+	router.GET("/", handlers.IndexHandler)
+	router.GET("/browse/", handlers.BrowseHandler)
+	router.GET("/playlist/:id", handlers.PlaylistHandler)
+	http.ListenAndServe("localhost:8000", router)
 }

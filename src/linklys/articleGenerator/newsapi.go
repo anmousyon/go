@@ -88,7 +88,7 @@ func (n NewsAPI) getSourceArticles(source string) *Articles {
 	return a
 }
 
-func (n NewsAPI) getAllArticles() []Article {
+func (n NewsAPI) GetAllArticles() []Article {
 	s := n.getSources()
 	all := make([]Article, 0)
 	for _, source := range s.Sources {
