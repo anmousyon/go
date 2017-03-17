@@ -7,24 +7,24 @@ import (
 	"net/http"
 )
 
-var playlistTemplate = template.Must(template.ParseFiles("playlist.html"))
+var radioTemplate = template.Must(template.ParseFiles("radio.html"))
 
-type Playlist struct {
+type Radio struct {
 	Title    string
 	User     string
 	Articles []string
 }
 
-func PlaylistHandler(w http.ResponseWriter, r *http.Request, id httprouter.Params) {
+func RadioHandler(w http.ResponseWriter, r *http.Request, id httprouter.Params) {
 	fmt.Println(id)
 	//query database for id
 
 	//if id found, put into playlist struct
 	data := &Playlist{
 		Title:    "title",
-		User:     "body",
-		Articles: []string{"1", "2"},
+		User:     "user",
+		Articles: []string{"article1", "article2"},
 	}
 
-	playlistTemplate.Execute(w, data)
+	radioTemplate.Execute(w, data)
 }

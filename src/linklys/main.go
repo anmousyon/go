@@ -12,5 +12,6 @@ func main() {
 	router.GET("/", handlers.IndexHandler)
 	router.GET("/browse/", handlers.BrowseHandler)
 	router.GET("/playlist/:id", handlers.PlaylistHandler)
+	router.GET("/radio/:id", handlers.RadioHandler)
 	http.ListenAndServe("localhost:8000", router)
 }
