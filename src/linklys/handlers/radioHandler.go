@@ -17,10 +17,10 @@ type Radio struct {
 
 func RadioHandler(w http.ResponseWriter, r *http.Request, id httprouter.Params) {
 	fmt.Println(id)
-	//query database for id
+	//query database's radios table for id
 
 	//if id found, put into playlist struct
-	data := &Playlist{
+	data := &Radio{
 		Title:    "title",
 		User:     "user",
 		Articles: []string{"article1", "article2"},

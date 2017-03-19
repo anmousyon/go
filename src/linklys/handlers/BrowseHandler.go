@@ -15,7 +15,7 @@ type Browse struct {
 
 func BrowseHandler(w http.ResponseWriter, r *http.Request) {
 	links := []string{"1", "2"}
-	data := &Index {
+	data := &Browse {
 		Title: "title",
 		Body: "body",
 		Links: links,

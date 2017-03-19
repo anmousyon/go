@@ -1,53 +1,30 @@
 package articleGenerator
 
 import (
-	"net/http"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"time"
+	"linklys/models"
+	"net/http"
 )
 
 type NewsAPI struct {
 	sources string
-	base string
-	sort string
-	api string
+	base    string
+	sort    string
+	api     string
 }
 
 type Sources struct {
-	Status string `json:"status"`
-	Sources []struct {
-		ID string `json:"id"`
-		Name string `json:"name"`
-		Description string `json:"description"`
-		URL string `json:"url"`
-		Category string `json:"category"`
-		Language string `json:"language"`
-		Country string `json:"country"`
-		UrlsToLogos struct {
-			Small string `json:"small"`
-			Medium string `json:"medium"`
-			Large string `json:"large"`
-		} `json:"urlsToLogos"`
-		SortBysAvailable []string `json:"sortBysAvailable"`
-	} `json:"sources"`
+	Status  string          `json:"status"`
+	Sources []models.Source `json:"sources"`
 }
 
 type Articles struct {
-	Status string `json:"status"`
-	Source string `json:"source"`
-	SortBy string `json:"sortBy"`
-	Articles []Article `json:"articles"`
-}
-
-type Article struct {
-	Author string `json:"author"`
-	Title string `json:"title"`
-	Description string `json:"description"`
-	URL string `json:"url"`
-	URLToImage string `json:"urlToImage"`
-	PublishedAt time.Time `json:"publishedAt"`
+	Status   string           `json:"status"`
+	Source   string           `json:"source"`
+	SortBy   string           `json:"sortBy"`
+	Articles []models.Article `json:"articles"`
 }
 
 func (n NewsAPI) buildURLs() {
@@ -84,13 +61,12 @@ func (n NewsAPI) getSourceArticles(source string) *Articles {
 	a := new(Articles)
 	body, err := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &a)
-
 	return a
 }
 
-func (n NewsAPI) GetAllArticles() []Article {
+func (n NewsAPI) GetAllArticles() []models.Article {
 	s := n.getSources()
-	all := make([]Article, 0)
+	all := make([]models.Article, 0)
 	for _, source := range s.Sources {
 		a := n.getSourceArticles(source.Name)
 		all = append(all, a.Articles...)
