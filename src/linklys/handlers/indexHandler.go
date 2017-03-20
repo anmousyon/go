@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"html/template"
+	"github.com/julienschmidt/httprouter"
 )
 
 var indexTemplate = template.Must(template.ParseFiles("index.html"))
@@ -13,7 +14,7 @@ type Index struct {
 	Links []string
 }
 
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
+func IndexHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	links := []string{"1", "2"}
 	data := &Index {
 		Title: "title",

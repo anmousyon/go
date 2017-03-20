@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"html/template"
+	"github.com/julienschmidt/httprouter"
 )
 
 var browseTemplate = template.Must(template.ParseFiles("browse.html"))
@@ -13,7 +14,7 @@ type Browse struct {
 	Links []string
 }
 
-func BrowseHandler(w http.ResponseWriter, r *http.Request) {
+func BrowseHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	links := []string{"1", "2"}
 	data := &Browse {
 		Title: "title",
