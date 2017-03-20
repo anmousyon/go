@@ -2,15 +2,12 @@ package linklys
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"linklys/server/handlers"
 	"net/http"
+	"linklys/server/setup"
 )
 
 func main() {
 	router := httprouter.New()
-	router.GET("/", handlers.IndexHandler)
-	router.GET("/browse/", handlers.BrowseHandler)
-	router.GET("/playlist/:id", handlers.PlaylistHandler)
-	router.GET("/radio/:id", handlers.RadioHandler)
+	setup.addHandlers(router)
 	http.ListenAndServe("localhost:8000", router)
 }
