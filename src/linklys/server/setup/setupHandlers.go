@@ -1,11 +1,11 @@
-package server
+package setup
 
 import (
 	"github.com/julienschmidt/httprouter"
 	"linklys/server/handlers"
 )
 
-func addHandlers(r *httprouter.Router) {
+func AddHandlers(r *httprouter.Router) {
 	r.GET("/", handlers.IndexHandler)
 	r.GET("/browse/", handlers.BrowseHandler)
 	r.GET("/playlist/:id", handlers.PlaylistHandler)

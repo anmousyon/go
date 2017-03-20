@@ -8,6 +8,6 @@ import (
 
 func main() {
 	router := httprouter.New()
-	setup.addHandlers(router)
+	setup.AddHandlers(router)
 	http.ListenAndServe("localhost:8000", router)
 }
