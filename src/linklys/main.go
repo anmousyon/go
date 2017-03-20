@@ -1,11 +1,10 @@
 package linklys
 
 import (
-	"net/http"
-	"linklys/handlers"
 	"github.com/julienschmidt/httprouter"
+	"linklys/server/handlers"
+	"net/http"
 )
-
 
 func main() {
 	router := httprouter.New()

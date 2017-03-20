@@ -1,24 +1,24 @@
 package handlers
 
 import (
-	"net/http"
-	"html/template"
 	"github.com/julienschmidt/httprouter"
+	"html/template"
+	"net/http"
 )
 
 var indexTemplate = template.Must(template.ParseFiles("index.html"))
 
-type Index struct {
+type index struct {
 	Title string
-	Body string
+	Body  string
 	Links []string
 }
 
-func IndexHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func IndexHandler(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	links := []string{"1", "2"}
-	data := &Index {
+	data := &index{
 		Title: "title",
-		Body: "body",
+		Body:  "body",
 		Links: links,
 	}
 	indexTemplate.Execute(w, data)
