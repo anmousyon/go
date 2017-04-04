@@ -15,12 +15,12 @@ func JsonToStruct(body []byte) interface{} {
 	} else {
 		json.Unmarshal(body, &u)
 	}
-
 	return u
 }
 
 func RespToJson(resp *http.Response) []byte {
 	body, err := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	if err != nil {
 		fmt.Println("error on response read")
 	}
