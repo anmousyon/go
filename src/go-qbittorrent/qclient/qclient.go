@@ -163,21 +163,14 @@ func (c *Client) postMultipart(endpoint string, data map[string]string) *http.Re
 	for key, val := range data {
 		w.WriteField(key, val)
 	}
+	contentType := w.FormDataContentType()
 
 	err := w.Close()
 	if err != nil {
 		fmt.Println("error on closing multipart form writer")
 	}
 
-	req, err := http.NewRequest("POST", c.URL+endpoint, &b)
-	if err != nil {
-		fmt.Println("error on creating post request at endpoint: " + endpoint)
-	}
-	req.Header.Set("Content-Type", w.FormDataContentType())
-
-	//printRequest(req)
-
-	resp, err := c.http.Do(req)
+	resp, err := http.Post(c.URL+endpoint, contentType, &b)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println("error on performing multipart post request at endpoint: " + endpoint)
