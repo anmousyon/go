@@ -1,9 +1,11 @@
 package qclient
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httputil"
@@ -57,7 +59,7 @@ func NewClient(url string) *Client {
 func (c *Client) get(endpoint string) *http.Response {
 	req, _ := http.NewRequest("GET", c.URL+endpoint, nil)
 	req.Header.Set("User-Agent", "autodownloader v0.1")
-	printRequest(req)
+	//printRequest(req)
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -86,7 +88,7 @@ func (c *Client) getWithParams(endpoint string, params map[string]string) *http.
 	}
 	req.URL.RawQuery = q.Encode()
 
-	printRequest(req)
+	//printRequest(req)
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -113,7 +115,7 @@ func addForm(req *http.Request, params map[string]string) *http.Request {
 func (c *Client) post(endpoint string, data map[string]string) *http.Response {
 	req, err := http.NewRequest("POST", c.URL+endpoint, nil)
 	if err != nil {
-		fmt.Println("error on creating get request at endpoint: " + endpoint)
+		fmt.Println("error on creating post request at endpoint: " + endpoint)
 	}
 
 	req.Header.Set("User-Agent", "autodownloader v0.1")
@@ -135,10 +137,10 @@ func (c *Client) post(endpoint string, data map[string]string) *http.Response {
 func (c *Client) postWithHeaders(endpoint string, data map[string]string) *http.Response {
 	req, err := http.NewRequest("POST", c.URL+endpoint, nil)
 	if err != nil {
-		fmt.Println("error on creating get request at endpoint: " + endpoint)
+		fmt.Println("error on creating post request at endpoint: " + endpoint)
 	}
 
-	req.Header.Set("content-type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "autodownloader v0.1")
 
 	req = addForm(req, data)
@@ -150,6 +152,38 @@ func (c *Client) postWithHeaders(endpoint string, data map[string]string) *http.
 	}
 
 	//printResponse(resp)
+
+	return resp
+}
+
+func (c *Client) postMultipart(endpoint string, data map[string]string) *http.Response {
+
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	for key, val := range data {
+		w.WriteField(key, val)
+	}
+
+	err := w.Close()
+	if err != nil {
+		fmt.Println("error on closing multipart form writer")
+	}
+
+	req, err := http.NewRequest("POST", c.URL+endpoint, &b)
+	if err != nil {
+		fmt.Println("error on creating post request at endpoint: " + endpoint)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	//printRequest(req)
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("error on performing multipart post request at endpoint: " + endpoint)
+	}
+
+	printResponse(resp)
 
 	return resp
 }
@@ -232,7 +266,6 @@ func (c *Client) Torrents(filters map[string]string) (torrentList []BasicTorrent
 		params[k] = v
 	}
 	resp := c.getWithParams("query/torrents", params)
-
 	var t []BasicTorrent
 	json.NewDecoder(resp.Body).Decode(&t)
 	return t
@@ -355,7 +388,7 @@ func (c *Client) Sync(rid string) Sync {
 //DownloadFromLink starts downloading a torrent from a link
 func (c *Client) DownloadFromLink(link string, options map[string]string) {
 	options["urls"] = link
-	c.postWithHeaders("command/download", options)
+	c.postMultipart("command/download", options)
 }
 
 //DownloadFromFile downloads a torrent from a file
