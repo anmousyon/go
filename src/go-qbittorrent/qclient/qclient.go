@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
-	"net/http/httputil"
+	//"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
@@ -27,6 +27,7 @@ type Client struct {
 	Jar           http.CookieJar
 }
 
+/*
 func printResponse(resp *http.Response) {
 	x := make([]byte, 256)
 	x, _ = ioutil.ReadAll(resp.Body)
@@ -40,6 +41,7 @@ func printRequest(req *http.Request) {
 	}
 	fmt.Println(string(requestDump))
 }
+*/
 
 //NewClient creates a new client connection to qbittorrent
 func NewClient(url string) *Client {
@@ -58,28 +60,21 @@ func NewClient(url string) *Client {
 	return c
 }
 
-func (c *Client) get(endpoint string) *http.Response {
+func (c *Client) get(endpoint string) (*http.Response, error) {
 	req, _ := http.NewRequest("GET", c.URL+endpoint, nil)
 	req.Header.Set("User-Agent", "autodownloader v0.1")
-	//printRequest(req)
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("error on performing get request at endpoint: " + endpoint)
+		return nil, err
 	}
 
-	//printResponse(resp)
-
-	return resp
+	return resp, nil
 }
 
-func (c *Client) getWithParams(endpoint string, params map[string]string) *http.Response {
+func (c *Client) getWithParams(endpoint string, params map[string]string) (*http.Response, error) {
 
 	req, err := http.NewRequest("GET", c.URL+endpoint, nil)
-	if err != nil {
-		fmt.Println("error on creating get request at endpoint: " + endpoint)
-	}
 
 	req.Header.Set("User-Agent", "autodownloader v0.1")
 
@@ -90,19 +85,14 @@ func (c *Client) getWithParams(endpoint string, params map[string]string) *http.
 	}
 	req.URL.RawQuery = q.Encode()
 
-	//printRequest(req)
-
 	resp, err := c.http.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("error on performing get request (with params) at endpoint: " + endpoint)
+		return nil, err
 	}
-
-	//printResponse(resp)
 
 	req.Close = true
 
-	return resp
+	return resp, nil
 }
 
 func addForm(req *http.Request, params map[string]string) *http.Request {
@@ -114,10 +104,10 @@ func addForm(req *http.Request, params map[string]string) *http.Request {
 	return req
 }
 
-func (c *Client) post(endpoint string, data map[string]string) *http.Response {
+func (c *Client) post(endpoint string, data map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest("POST", c.URL+endpoint, nil)
 	if err != nil {
-		fmt.Println("error on creating post request at endpoint: " + endpoint)
+		return nil, err
 	}
 
 	req.Header.Set("User-Agent", "autodownloader v0.1")
@@ -126,22 +116,20 @@ func (c *Client) post(endpoint string, data map[string]string) *http.Response {
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("error on performing post request at endpoint: " + endpoint)
+		return nil, err
 	}
 
-	//printResponse(resp)
-
-	return resp
+	return resp, nil
 
 }
 
-func (c *Client) postWithHeaders(endpoint string, data map[string]string) *http.Response {
+func (c *Client) postWithHeaders(endpoint string, data map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest("POST", c.URL+endpoint, nil)
 	if err != nil {
-		fmt.Println("error on creating post request at endpoint: " + endpoint)
+		return nil, err
 	}
 
+	//add headers
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "autodownloader v0.1")
 
@@ -149,16 +137,13 @@ func (c *Client) postWithHeaders(endpoint string, data map[string]string) *http.
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("error on performing post (with headers) request at endpoint: " + endpoint)
+		return nil, err
 	}
 
-	//printResponse(resp)
-
-	return resp
+	return resp, nil
 }
 
-func (c *Client) postMultipart(endpoint string, data map[string]string) *http.Response {
+func (c *Client) postMultipart(endpoint string, data map[string]string) (*http.Response, error) {
 
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
@@ -169,41 +154,43 @@ func (c *Client) postMultipart(endpoint string, data map[string]string) *http.Re
 
 	err := w.Close()
 	if err != nil {
-		fmt.Println("error on closing multipart form writer")
+		return nil, err
 	}
 
 	resp, err := http.Post(c.URL+endpoint, contentType, &b)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("error on performing multipart post request at endpoint: " + endpoint)
+		return nil, err
 	}
 
-	printResponse(resp)
-
-	return resp
+	return resp, nil
 }
 
-func (c *Client) postMultipartFile(endpoint string, data map[string]string, file string) *http.Response {
+func (c *Client) postMultipartFile(endpoint string, data map[string]string, file string) (*http.Response, error) {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 
 	f, err := os.Open(file)
 	if err != nil {
-		fmt.Println("couldnt open file")
+		return nil, err
 	}
+
 	fileContents, err := ioutil.ReadAll(f)
 	if err != nil {
-		fmt.Println("err on reading file")
+		return nil, err
 	}
+
 	fi, err := f.Stat()
 	if err != nil {
-		fmt.Println("error on f.Stat()")
+		return nil, err
 	}
+
 	f.Close()
+
 	part, err := w.CreateFormFile("file", fi.Name())
 	if err != nil {
-		fmt.Println("error on createFormFile")
+		return nil, err
 	}
+
 	part.Write(fileContents)
 
 	for key, val := range data {
@@ -213,27 +200,27 @@ func (c *Client) postMultipartFile(endpoint string, data map[string]string, file
 
 	err = w.Close()
 	if err != nil {
-		fmt.Println("error on closing multipart form writer")
+		return nil, err
 	}
 
 	resp, err := http.Post(c.URL+endpoint, contentType, &b)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("error on performing multipart post request at endpoint: " + endpoint)
+		return nil, err
 	}
 
-	printResponse(resp)
-
-	return resp
+	return resp, nil
 }
 
 //Login logs you in to the qbittorrent client
-func (c *Client) Login(username string, password string) (loggedIn bool) {
+func (c *Client) Login(username string, password string) (loggedIn bool, err error) {
 	creds := make(map[string]string)
 	creds["username"] = username
 	creds["password"] = password
 
-	resp := c.post("login", creds)
+	resp, err := c.post("login", creds)
+	if err != nil {
+		return false, err
+	}
 	cookieURL, _ := url.Parse("http://localhost:8080")
 
 	if cookies := resp.Cookies(); len(cookies) > 0 {
@@ -249,25 +236,28 @@ func (c *Client) Login(username string, password string) (loggedIn bool) {
 	} else {
 		fmt.Println(resp.Status)
 	}
-	return c.Authenticated
+	return c.Authenticated, nil
 }
 
 //Logout logs you out of the qbittorrent client
-func (c *Client) Logout() (loggedOut bool) {
-	resp := c.get("logout")
+func (c *Client) Logout() (loggedOut bool, err error) {
+	resp, err := c.get("logout")
+	if err != nil {
+		return false, err
+	}
 	fmt.Println(resp)
 	if resp.Status == "200 OK" {
 		c.Authenticated = false
 	} else {
 		fmt.Println(resp.Status)
 	}
-	return !c.Authenticated
+	return !c.Authenticated, nil
 }
 
 //Shutdown shuts down the qbittorrent client
-func (c *Client) Shutdown() (shuttingDown bool) {
-	resp := c.get("command/shutdown")
-	return resp.Status == "200 OK"
+func (c *Client) Shutdown() (shuttingDown bool, err error) {
+	resp, err := c.get("command/shutdown")
+	return resp.Status == "200 OK", err
 }
 
 //BasicTorrent holds a basic torrent object from qbittorrent
@@ -296,7 +286,8 @@ type BasicTorrent struct {
 }
 
 //Torrents gets a list of all torrents in qbittorrent matching your filter
-func (c *Client) Torrents(filters map[string]string) (torrentList []BasicTorrent) {
+func (c *Client) Torrents(filters map[string]string) (torrentList []BasicTorrent, err error) {
+	var t []BasicTorrent
 	params := make(map[string]string)
 	for k, v := range filters {
 		if k == "status" {
@@ -304,10 +295,12 @@ func (c *Client) Torrents(filters map[string]string) (torrentList []BasicTorrent
 		}
 		params[k] = v
 	}
-	resp := c.getWithParams("query/torrents", params)
-	var t []BasicTorrent
+	resp, err := c.getWithParams("query/torrents", params)
+	if err != nil {
+		return t, err
+	}
 	json.NewDecoder(resp.Body).Decode(&t)
-	return t
+	return t, nil
 }
 
 //Torrent holds a torrent object from qbittorrent
@@ -348,11 +341,14 @@ type Torrent struct {
 }
 
 //Torrent gets a specific torrent
-func (c *Client) Torrent(infoHash string) Torrent {
-	resp := c.get("query/propertiesGeneral/" + strings.ToLower(infoHash))
+func (c *Client) Torrent(infoHash string) (Torrent, error) {
 	var t Torrent
+	resp, err := c.get("query/propertiesGeneral/" + strings.ToLower(infoHash))
+	if err != nil {
+		return t, err
+	}
 	json.NewDecoder(resp.Body).Decode(&t)
-	return t
+	return t, nil
 }
 
 //Tracker holds a tracker object from qbittorrent
@@ -364,11 +360,14 @@ type Tracker struct {
 }
 
 //TorrentTrackers gets all trackers for a specific torrent
-func (c *Client) TorrentTrackers(infoHash string) []Tracker {
-	resp := c.get("query/propertiesTrackers/" + strings.ToLower(infoHash))
+func (c *Client) TorrentTrackers(infoHash string) ([]Tracker, error) {
 	var t []Tracker
+	resp, err := c.get("query/propertiesTrackers/" + strings.ToLower(infoHash))
+	if err != nil {
+		return t, err
+	}
 	json.NewDecoder(resp.Body).Decode(&t)
-	return t
+	return t, nil
 }
 
 //WebSeed holds a webseed object from qbittorrent
@@ -377,11 +376,14 @@ type WebSeed struct {
 }
 
 //TorrentWebSeeds gets seeders for a specific torrent
-func (c *Client) TorrentWebSeeds(infoHash string) []WebSeed {
-	resp := c.get("query/propertiesWebSeeds/" + strings.ToLower(infoHash))
+func (c *Client) TorrentWebSeeds(infoHash string) ([]WebSeed, error) {
 	var w []WebSeed
+	resp, err := c.get("query/propertiesWebSeeds/" + strings.ToLower(infoHash))
+	if err != nil {
+		return w, err
+	}
 	json.NewDecoder(resp.Body).Decode(&w)
-	return w
+	return w, nil
 }
 
 //TorrentFile holds a torrent file object from qbittorrent
@@ -394,11 +396,14 @@ type TorrentFile struct {
 }
 
 //TorrentFiles gets the files of a specifc torrent
-func (c *Client) TorrentFiles(infoHash string) []TorrentFile {
-	resp := c.get("query/propertiesFiles" + strings.ToLower(infoHash))
+func (c *Client) TorrentFiles(infoHash string) ([]TorrentFile, error) {
 	var t []TorrentFile
+	resp, err := c.get("query/propertiesFiles" + strings.ToLower(infoHash))
+	if err != nil {
+		return t, err
+	}
 	json.NewDecoder(resp.Body).Decode(&t)
-	return t
+	return t, nil
 }
 
 //Sync holds the sync response struct
@@ -423,33 +428,36 @@ type Sync struct {
 }
 
 //Sync syncs your maindata
-func (c *Client) Sync(rid string) Sync {
+func (c *Client) Sync(rid string) (Sync, error) {
+	var s Sync
 	params := make(map[string]string)
 	params["rid"] = rid
-	resp := c.getWithParams("sync/maindata", params)
+	resp, err := c.getWithParams("sync/maindata", params)
+	if err != nil {
+		return s, err
+	}
 	//printResponse(resp)
-	var s Sync
 	json.NewDecoder(resp.Body).Decode(&s)
-	return s
+	return s, nil
 }
 
 //DownloadFromLink starts downloading a torrent from a link
-func (c *Client) DownloadFromLink(link string, options map[string]string) {
+func (c *Client) DownloadFromLink(link string, options map[string]string) (*http.Response, error) {
 	options["urls"] = link
-	c.postMultipart("command/download", options)
+	return c.postMultipart("command/download", options)
 }
 
 //DownloadFromFile downloads a torrent from a file
-func (c *Client) DownloadFromFile(fileName string, options map[string]string) {
-	c.postMultipartFile("command/download", options, fileName)
+func (c *Client) DownloadFromFile(fileName string, options map[string]string) (*http.Response, error) {
+	return c.postMultipartFile("command/download", options, fileName)
 }
 
 //AddTrackers adds trackers to a specific torrent
-func (c *Client) AddTrackers(infoHash string, trackers string) {
+func (c *Client) AddTrackers(infoHash string, trackers string) (*http.Response, error) {
 	params := make(map[string]string)
 	params["hash"] = strings.ToLower(infoHash)
 	params["urls"] = trackers
-	c.post("command/addTrackers", params)
+	return c.post("command/addTrackers", params)
 }
 
 //process the hash list and put it into a combined (single element) map with all hashes connected with '|'
@@ -464,99 +472,99 @@ func (Client) processInfoHashList(infoHashList []string) (hashMap map[string]str
 }
 
 //Pause pauses a specific torrent
-func (c *Client) Pause(infoHash string) {
+func (c *Client) Pause(infoHash string) (*http.Response, error) {
 	params := make(map[string]string)
 	params["hash"] = strings.ToLower(infoHash)
-	c.post("command/pause", params)
+	return c.post("command/pause", params)
 }
 
 //PauseAll pauses all torrents
-func (c *Client) PauseAll() {
-	c.get("command/pauseAll")
+func (c *Client) PauseAll() (*http.Response, error) {
+	return c.get("command/pauseAll")
 }
 
 //PauseMultiple pauses a list of torrents
-func (c *Client) PauseMultiple(infoHashList []string) {
+func (c *Client) PauseMultiple(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/pauseAll", params)
+	return c.post("command/pauseAll", params)
 }
 
 //SetLabel sets the labels for a list of torrents
-func (c *Client) SetLabel(infoHashList []string, label string) {
+func (c *Client) SetLabel(infoHashList []string, label string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
 	params["label"] = label
-	c.post("command/setLabel", params)
+	return c.post("command/setLabel", params)
 }
 
 //SetCategory sets the category for a list of torrents
-func (c *Client) SetCategory(infoHashList []string, category string) {
+func (c *Client) SetCategory(infoHashList []string, category string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
 	params["category"] = category
-	c.post("command/setLabel", params)
+	return c.post("command/setLabel", params)
 }
 
 //Resume resumes a specific torrent
-func (c *Client) Resume(infoHash string) {
+func (c *Client) Resume(infoHash string) (*http.Response, error) {
 	params := make(map[string]string)
 	params["hash"] = strings.ToLower(infoHash)
-	c.post("command/resume", params)
+	return c.post("command/resume", params)
 }
 
 //ResumeAll resumes all torrents
-func (c *Client) ResumeAll(infoHashList []string) {
-	c.get("command/resumeAll")
+func (c *Client) ResumeAll(infoHashList []string) (*http.Response, error) {
+	return c.get("command/resumeAll")
 }
 
 //ResumeMultiple resumes a list of torrents
-func (c *Client) ResumeMultiple(infoHashList []string) {
+func (c *Client) ResumeMultiple(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/resumeAll", params)
+	return c.post("command/resumeAll", params)
 }
 
 //DeleteTemp deletes the temporary files for a list of torrents
-func (c *Client) DeleteTemp(infoHashList []string) {
+func (c *Client) DeleteTemp(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/delete", params)
+	return c.post("command/delete", params)
 }
 
 //DeletePermanently deletes all files for a list of torrents
-func (c *Client) DeletePermanently(infoHashList []string) {
+func (c *Client) DeletePermanently(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/deletePerm", params)
+	return c.post("command/deletePerm", params)
 }
 
 //Recheck rechecks a list of torrents
-func (c *Client) Recheck(infoHashList []string) {
+func (c *Client) Recheck(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/recheck", params)
+	return c.post("command/recheck", params)
 }
 
 //IncreasePriority increases the priority of a list of torrents
-func (c *Client) IncreasePriority(infoHashList []string) {
+func (c *Client) IncreasePriority(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/increasePrio", params)
+	return c.post("command/increasePrio", params)
 }
 
 //DecreasePriority decreases the priority of a list of torrents
-func (c *Client) DecreasePriority(infoHashList []string) {
+func (c *Client) DecreasePriority(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/decreasePrio", params)
+	return c.post("command/decreasePrio", params)
 }
 
 //SetMaxPriority sets the max priority for a list of torrents
-func (c *Client) SetMaxPriority(infoHashList []string) {
+func (c *Client) SetMaxPriority(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/topPrio", params)
+	return c.post("command/topPrio", params)
 }
 
 //SetMinPriority sets the min priority for a list of torrents
-func (c *Client) SetMinPriority(infoHashList []string) {
+func (c *Client) SetMinPriority(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/bottomPrio", params)
+	return c.post("command/bottomPrio", params)
 }
 
 //SetFilePriority sets the priority for a specific torrent file
-func (c *Client) SetFilePriority(infoHash string, fileID string, priority string) {
+func (c *Client) SetFilePriority(infoHash string, fileID string, priority string) (*http.Response, error) {
 	priorities := [...]string{"0", "1", "2", "7"}
 	for _, v := range priorities {
 		if v == priority {
@@ -567,104 +575,119 @@ func (c *Client) SetFilePriority(infoHash string, fileID string, priority string
 	params["hash"] = infoHash
 	params["id"] = fileID
 	params["priority"] = priority
-	c.post("command/setFilePriority", params)
+	return c.post("command/setFilePriority", params)
 }
 
 //GetGlobalDownloadLimit gets the global download limit of your qbittorrent client
-func (c *Client) GetGlobalDownloadLimit() (limit int) {
-	resp := c.get("command/getGlobalDlLimit")
+func (c *Client) GetGlobalDownloadLimit() (limit int, err error) {
 	var l int
+	resp, err := c.get("command/getGlobalDlLimit")
+	if err != nil {
+		return l, err
+	}
 	json.NewDecoder(resp.Body).Decode(&l)
-	return l
+	return l, nil
 }
 
 //SetGlobalDownloadLimit sets the global download limit of your qbittorrent client
-func (c *Client) SetGlobalDownloadLimit(limit string) {
+func (c *Client) SetGlobalDownloadLimit(limit string) (*http.Response, error) {
 	params := make(map[string]string)
 	params["limit"] = limit
-	c.post("command/setGlobalDlLimit", params)
+	return c.post("command/setGlobalDlLimit", params)
 }
 
 //GetGlobalUploadLimit gets the global upload limit of your qbittorrent client
-func (c *Client) GetGlobalUploadLimit() (limit int) {
-	resp := c.get("command/getGlobalUpLimit")
+func (c *Client) GetGlobalUploadLimit() (limit int, err error) {
 	var l int
+	resp, err := c.get("command/getGlobalUpLimit")
+	if err != nil {
+		return l, err
+	}
 	json.NewDecoder(resp.Body).Decode(&l)
-	return l
+	return l, nil
 }
 
 //SetGlobalUploadLimit sets the global upload limit of your qbittorrent client
-func (c *Client) SetGlobalUploadLimit(limit string) {
+func (c *Client) SetGlobalUploadLimit(limit string) (*http.Response, error) {
 	params := make(map[string]string)
 	params["limit"] = limit
-	c.post("command/setGlobalUpLimit", params)
+	return c.post("command/setGlobalUpLimit", params)
 }
 
 //GetTorrentDownloadLimit gets the download limit for a list of torrents
-func (c *Client) GetTorrentDownloadLimit(infoHashList []string) (limits map[string]string) {
-	params := c.processInfoHashList(infoHashList)
-	resp := c.post("command/getTorrentsDlLimit", params)
+func (c *Client) GetTorrentDownloadLimit(infoHashList []string) (limits map[string]string, err error) {
 	var l map[string]string
+	params := c.processInfoHashList(infoHashList)
+	resp, err := c.post("command/getTorrentsDlLimit", params)
+	if err != nil {
+		return l, err
+	}
 	json.NewDecoder(resp.Body).Decode(&l)
-	return l
+	return l, nil
 }
 
 //SetTorrentDownloadLimit sets the download limit for a list of torrents
-func (c *Client) SetTorrentDownloadLimit(infoHashList []string, limit string) {
+func (c *Client) SetTorrentDownloadLimit(infoHashList []string, limit string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
 	params["limit"] = limit
-	c.post("command/setTorrentsDlLimit", params)
+	return c.post("command/setTorrentsDlLimit", params)
 }
 
 //GetTorrentUploadLimit gets the upload limit for a list of torrents
-func (c *Client) GetTorrentUploadLimit(infoHashList []string) (limits map[string]string) {
-	params := c.processInfoHashList(infoHashList)
-	resp := c.post("command/getTorrentsUpLimit", params)
+func (c *Client) GetTorrentUploadLimit(infoHashList []string) (limits map[string]string, err error) {
 	var l map[string]string
+	params := c.processInfoHashList(infoHashList)
+	resp, err := c.post("command/getTorrentsUpLimit", params)
+	if err != nil {
+		return l, err
+	}
 	json.NewDecoder(resp.Body).Decode(&l)
-	return l
+	return l, nil
 }
 
 //SetTorrentUploadLimit sets the upload limit of a list of torrents
-func (c *Client) SetTorrentUploadLimit(infoHashList []string, limit string) {
+func (c *Client) SetTorrentUploadLimit(infoHashList []string, limit string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
 	params["limit"] = limit
-	c.post("command/setTorrentsUpLimit", params)
+	return c.post("command/setTorrentsUpLimit", params)
 }
 
 //SetPreferences sets the preferences of your qbittorrent client
-func (c *Client) SetPreferences(params map[string]string) {
-	c.postWithHeaders("command/setPreferences", params)
+func (c *Client) SetPreferences(params map[string]string) (*http.Response, error) {
+	return c.postWithHeaders("command/setPreferences", params)
 }
 
-//GetAlternativeSpeedStatus toggles the alternative speed status of your qbittorrent client
-func (c *Client) GetAlternativeSpeedStatus() (status bool) {
-	resp := c.get("command/alternativeSpeedLimitsEnabled")
+//GetAlternativeSpeedStatus gets the alternative speed status of your qbittorrent client
+func (c *Client) GetAlternativeSpeedStatus() (status bool, err error) {
 	var s bool
+	resp, err := c.get("command/alternativeSpeedLimitsEnabled")
+	if err != nil {
+		return s, err
+	}
 	json.NewDecoder(resp.Body).Decode(&s)
-	return s
+	return s, nil
 }
 
 //ToggleAlternativeSpeed toggles the alternative speed of your qbittorrent client
-func (c *Client) ToggleAlternativeSpeed() {
-	c.get("command/toggleAlternativeSpeedLimits")
+func (c *Client) ToggleAlternativeSpeed() (*http.Response, error) {
+	return c.get("command/toggleAlternativeSpeedLimits")
 }
 
 //ToggleSequentialDownload toggles the download sequence of a list of torrents
-func (c *Client) ToggleSequentialDownload(infoHashList []string) {
+func (c *Client) ToggleSequentialDownload(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/toggleSequentialDownload", params)
+	return c.post("command/toggleSequentialDownload", params)
 }
 
 //ToggleFirstLastPiecePriority toggles first last piece priority of a list of torrents
-func (c *Client) ToggleFirstLastPiecePriority(infoHashList []string) {
+func (c *Client) ToggleFirstLastPiecePriority(infoHashList []string) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
-	c.post("command/toggleFirstLastPiecePrio", params)
+	return c.post("command/toggleFirstLastPiecePrio", params)
 }
 
-//ForceStart force stats a list of torrents
-func (c *Client) ForceStart(infoHashList []string, value bool) {
+//ForceStart force starts a list of torrents
+func (c *Client) ForceStart(infoHashList []string, value bool) (*http.Response, error) {
 	params := c.processInfoHashList(infoHashList)
 	params["value"] = strconv.FormatBool(value)
-	c.post("command/setForceStart", params)
+	return c.post("command/setForceStart", params)
 }
