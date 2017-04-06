@@ -4,7 +4,6 @@ import (
 	"go-qbittorrent/qclient"
 	"time"
 	"fmt"
-	"strconv"
 )
 
 func main() {
@@ -12,7 +11,9 @@ func main() {
 	//time.Sleep(time.Second)
 	qb.Login("pavo", "buffalo12")
 	time.Sleep(time.Second * 2)
-
+	s := qb.Sync("0")
+	fmt.Println(s)
+	/*
 	params := make(map[string]string)
 	params["filter"] = "all"
 	torrents := qb.Torrents(params)
@@ -35,4 +36,5 @@ func main() {
 		fmt.Print("Hash " + strconv.Itoa(i) + ": ")
 		fmt.Println(t.Hash)
 	}
+	*/
 }

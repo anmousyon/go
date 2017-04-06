@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"os"
+
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -181,6 +183,50 @@ func (c *Client) postMultipart(endpoint string, data map[string]string) *http.Re
 	return resp
 }
 
+func (c *Client) postMultipartFile(endpoint string, data map[string]string, file string) *http.Response {
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+
+	f, err := os.Open(file)
+	if err != nil {
+		fmt.Println("couldnt open file")
+	}
+	fileContents, err := ioutil.ReadAll(f)
+	if err != nil {
+		fmt.Println("err on reading file")
+	}
+	fi, err := f.Stat()
+	if err != nil {
+		fmt.Println("error on f.Stat()")
+	}
+	f.Close()
+	part, err := w.CreateFormFile("file", fi.Name())
+	if err != nil {
+		fmt.Println("error on createFormFile")
+	}
+	part.Write(fileContents)
+
+	for key, val := range data {
+		w.WriteField(key, val)
+	}
+	contentType := w.FormDataContentType()
+
+	err = w.Close()
+	if err != nil {
+		fmt.Println("error on closing multipart form writer")
+	}
+
+	resp, err := http.Post(c.URL+endpoint, contentType, &b)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("error on performing multipart post request at endpoint: " + endpoint)
+	}
+
+	printResponse(resp)
+
+	return resp
+}
+
 //Login logs you in to the qbittorrent client
 func (c *Client) Login(username string, password string) (loggedIn bool) {
 	creds := make(map[string]string)
@@ -264,7 +310,7 @@ func (c *Client) Torrents(filters map[string]string) (torrentList []BasicTorrent
 	return t
 }
 
-//Torrent hold torrent objects from qbittorrent
+//Torrent holds a torrent object from qbittorrent
 type Torrent struct {
 	AdditionDate           int     `json:"addition_date"`
 	Comment                string  `json:"comment"`
@@ -355,15 +401,25 @@ func (c *Client) TorrentFiles(infoHash string) []TorrentFile {
 	return t
 }
 
-//Status is the status of a torrent
-type Status struct {
-	status string
-}
-
-//Sync is the result of syncing your qbittorrent client
+//Sync holds the sync response struct
 type Sync struct {
-	rid     int
-	Torrent map[string]Status
+	Categories  []string `json:"categories"`
+	FullUpdate  bool     `json:"full_update"`
+	Rid         int      `json:"rid"`
+	ServerState struct {
+		ConnectionStatus  string `json:"connection_status"`
+		DhtNodes          int    `json:"dht_nodes"`
+		DlInfoData        int    `json:"dl_info_data"`
+		DlInfoSpeed       int    `json:"dl_info_speed"`
+		DlRateLimit       int    `json:"dl_rate_limit"`
+		Queueing          bool   `json:"queueing"`
+		RefreshInterval   int    `json:"refresh_interval"`
+		UpInfoData        int    `json:"up_info_data"`
+		UpInfoSpeed       int    `json:"up_info_speed"`
+		UpRateLimit       int    `json:"up_rate_limit"`
+		UseAltSpeedLimits bool   `json:"use_alt_speed_limits"`
+	} `json:"server_state"`
+	Torrents map[string]Torrent `json:"torrents"`
 }
 
 //Sync syncs your maindata
@@ -371,11 +427,10 @@ func (c *Client) Sync(rid string) Sync {
 	params := make(map[string]string)
 	params["rid"] = rid
 	resp := c.getWithParams("sync/maindata", params)
-	var s map[string]interface{}
+	//printResponse(resp)
+	var s Sync
 	json.NewDecoder(resp.Body).Decode(&s)
-	var sync Sync
-	//TODO: put map into Sync struct
-	return sync
+	return s
 }
 
 //DownloadFromLink starts downloading a torrent from a link
@@ -386,8 +441,7 @@ func (c *Client) DownloadFromLink(link string, options map[string]string) {
 
 //DownloadFromFile downloads a torrent from a file
 func (c *Client) DownloadFromFile(fileName string, options map[string]string) {
-	//TODO: implement a way to download using file buffer and new post method?
-	c.post("command/download", options)
+	c.postMultipartFile("command/download", options, fileName)
 }
 
 //AddTrackers adds trackers to a specific torrent
@@ -503,7 +557,6 @@ func (c *Client) SetMinPriority(infoHashList []string) {
 
 //SetFilePriority sets the priority for a specific torrent file
 func (c *Client) SetFilePriority(infoHash string, fileID string, priority string) {
-	//TODO: find a way to work with files
 	priorities := [...]string{"0", "1", "2", "7"}
 	for _, v := range priorities {
 		if v == priority {
