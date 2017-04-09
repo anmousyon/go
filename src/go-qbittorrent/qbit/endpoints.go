@@ -171,7 +171,7 @@ func (c *Client) DownloadFromLink(link string, options map[string]string) (*http
 
 //DownloadFromFile downloads a torrent from a file
 func (c *Client) DownloadFromFile(fileName string, options map[string]string) (*http.Response, error) {
-	return c.postMultipartFile("command/download", options, fileName)
+	return c.postMultipartFile("command/upload", options, fileName)
 }
 
 //AddTrackers adds trackers to a specific torrent

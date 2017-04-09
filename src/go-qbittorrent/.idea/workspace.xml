@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="27998bd0-5734-4f23-816a-ae3d2eabf415" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/jsonHelpers/helpers.go" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/qclient/endpoints.go" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/../rarbgo/.idea/libraries/GOPATH__rarbgo_.xml" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/../rarbgo/.idea/libraries/Go_SDK.xml" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/../rarbgo/.idea/vcs.xml" afterPath="" />
@@ -11,6 +9,9 @@
       <change type="DELETED" beforePath="$PROJECT_DIR$/../rarbgo/main.go" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.go" afterPath="$PROJECT_DIR$/main.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/qbit/endpoints.go" afterPath="$PROJECT_DIR$/qbit/endpoints.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/qbit/requests.go" afterPath="$PROJECT_DIR$/qbit/requests.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/qbit/tools.go" afterPath="$PROJECT_DIR$/qbit/tools.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../linklys/.idea/libraries/GOPATH__linklys_.xml" afterPath="$PROJECT_DIR$/../linklys/.idea/libraries/GOPATH__linklys_.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../linklys/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../linklys/.idea/workspace.xml" />
     </list>
@@ -30,8 +31,8 @@
       <file leaf-file-name="main.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="15" column="33" lean-forward="false" selection-start-line="15" selection-start-column="33" selection-end-line="15" selection-end-column="33" />
+            <state relative-caret-position="120">
+              <caret line="8" column="13" lean-forward="true" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
               <folding>
                 <element signature="e#14#62#0" expanded="true" />
               </folding>
@@ -39,12 +40,44 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="requests.go" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/qbit/requests.go">
+      <file leaf-file-name="models.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/qbit/models.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
+            <state relative-caret-position="-1235">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="endpoints.go" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/qbit/endpoints.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2205">
+              <caret line="158" column="23" lean-forward="false" selection-start-line="158" selection-start-column="23" selection-end-line="158" selection-end-column="23" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="tools.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/qbit/tools.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="90">
+              <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="requests.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/qbit/requests.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2310">
+              <caret line="154" column="0" lean-forward="true" selection-start-line="154" selection-start-column="0" selection-end-line="154" selection-end-column="0" />
+              <folding>
+                <element signature="e#14#121#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -79,6 +112,9 @@
         <option value="$PROJECT_DIR$/qclient/tools.go" />
         <option value="$PROJECT_DIR$/qclient/endpoints.go" />
         <option value="$PROJECT_DIR$/qclient/requests.go" />
+        <option value="$PROJECT_DIR$/qbit/tools.go" />
+        <option value="$PROJECT_DIR$/qbit/requests.go" />
+        <option value="$PROJECT_DIR$/qbit/endpoints.go" />
         <option value="$PROJECT_DIR$/main.go" />
       </list>
     </option>
@@ -386,20 +422,46 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/qbit/tools.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/qbit/models.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1235">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/qbit/requests.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2310">
+          <caret line="154" column="0" lean-forward="true" selection-start-line="154" selection-start-column="0" selection-end-line="154" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#121#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/main.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" column="33" lean-forward="false" selection-start-line="15" selection-start-column="33" selection-end-line="15" selection-end-column="33" />
+        <state relative-caret-position="120">
+          <caret line="8" column="13" lean-forward="true" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
           <folding>
             <element signature="e#14#62#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/qbit/requests.go">
+    <entry file="file://$PROJECT_DIR$/qbit/endpoints.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state relative-caret-position="2205">
+          <caret line="158" column="23" lean-forward="false" selection-start-line="158" selection-start-column="23" selection-end-line="158" selection-end-column="23" />
           <folding />
         </state>
       </provider>
